@@ -40,6 +40,7 @@ public:
   bool transmission_complete() {
     if(q.departure()) {
       transmitting = false;
+      retrans_count = 1;
       return true;
     }
     return false;
@@ -64,13 +65,17 @@ public:
     wait_counter = wait_time;
   }
 
+  void wait_random() {
+    wait_time = BEB(retrans_count);
+    wait();
+  }
+
   void abort() {
     if(++retrans_count > 10) {
       q.drop_frame();
       retrans_count = 1;
     }
-    wait_time = BEB(retrans_count);
-    wait();
+    wait_random();
   }
 
   bool waiting() {
@@ -130,7 +135,7 @@ public:
           //cout << "collision: " << tick << endl;
           // stations attempts to start transmission but medium is busy
           if(station.get_transmission_duration() == 0) {
-            station.wait();
+            station.wait_random();
           }
           // station is already transmitting and sensed collision
           else {
