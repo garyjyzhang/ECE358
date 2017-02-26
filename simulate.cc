@@ -111,7 +111,7 @@ queue<Packet*> packet_queue;
 
 int calc_arrival_time(){
   double u = (static_cast<double>(rand()) / static_cast<double>(RAND_MAX));   //generate random number between 0...1
-  int arrival_time = (int)((-1 / lambda)*log(1 - u) * 1000000);
+  int arrival_time = (int)((-1 / lambda)*log(1 - u) * 100000);
   return arrival_time;
 }
 
