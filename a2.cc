@@ -135,7 +135,7 @@ public:
         // if the station is waiting or has nothing to transmit, simply move on to the next station
         if(station.waiting() || !station.is_transmitting()) continue;
 
-        if(station.is_transmitting() && (station.is_receiving() || station.waiting())) {
+        if(station.is_transmitting() && station.is_receiving()) {
           //cout << "collision: " << tick << endl;
           // stations attempts to start transmission but medium is busy
           if(station.get_transmission_duration() == 0) {
