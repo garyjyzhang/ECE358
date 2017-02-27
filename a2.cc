@@ -70,7 +70,8 @@ public:
   }
 
   void wait_random() {
-    wait_time = BEB(retrans_count);
+    // wait_time = BEB(retrans_count);
+    wait_time = 0;
     wait();
   }
 
@@ -79,7 +80,8 @@ public:
       q.drop_frame();
       retrans_count = 1;
     }
-    wait_random();
+    wait_time = BEB(retrans_count);
+    wait();
   }
 
   bool waiting() {
@@ -172,17 +174,16 @@ public:
     }
 
 
-    int total_delay = 0;
+    long long total_delay = 0;
     for(int i = 0; i < num_stations; i++) {
       total_delay += stations[i].get_total_delay();
       packets_generated += stations[i].packets_generated;
-      cout << "station: " << i << " packet sent: " << stations[i].q.packet_sent << endl;
     }
 
     cout << "packets generated: " << packets_generated << endl;
     cout << "packets sent: " << packets_sent << endl;
     cout << "Throughput: " << (double) packets_sent / ((double) total_tick / 1e5) << endl;
-    cout << "Average delay: " << total_delay / (double) packets_sent * 10 << "us" << endl;
+    cout << "Average delay: " << total_delay / (double) packets_sent / 100 << "ms" << endl;
   }
 
 private:
@@ -198,16 +199,7 @@ private:
 int main() {
   int N, A, total_tick;
   cin >> N >> A >> total_tick;
-  // total_tick = 10000000;
-  // for(int j = 2; j < 9; j++)
-  //   for(int i = 2; i < 9; i++) {
-  //     N = i * 2;
-  //     A = j * 2;
-  // CSMA_CD csma(N, A, 8000, 1, total_tick);
-      CSMA_CD csma(N, A, 8000, 1, total_tick);
-      csma.simulate();
-    // }
-      cout << "c: " << counter << endl;
-      cout << "c2: " << counter2 << endl;
+  CSMA_CD csma(N, A, 8000, 1, total_tick);
+  csma.simulate();
   return 0;
 }
