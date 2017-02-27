@@ -7,6 +7,8 @@
 #include "simulate.cc"
 using namespace std;
 
+int counter = 0;
+int counter2 = 0;
 class Station {
 public:
   Station(int total_tick, int A, int L, int W) : retrans_count(1), transmission_duration(0), transmitting(false),
@@ -19,6 +21,7 @@ public:
     q.current_tick = tick;
     if(wait_counter > 0) {
       wait_counter--;
+      transmission_duration = 0;
     } else if(transmitting) {
       transmission_duration++;
     }
@@ -40,6 +43,7 @@ public:
   bool transmission_complete() {
     if(q.departure()) {
       transmitting = false;
+      transmission_duration = 0;
       retrans_count = 1;
       return true;
     }
@@ -90,6 +94,7 @@ public:
     return q.total_delay;
   }
 
+  Simulator q;
   int packets_generated;
 
 private:
@@ -100,7 +105,6 @@ private:
   int wait_counter;
   bool transmitting;
   // one queue from p1
-  Simulator q;
   int retrans_count;
 
   // indicates when the latest receiving of a frame starts and ends
@@ -114,7 +118,7 @@ private:
 class CSMA_CD {
 public:
   CSMA_CD(int N, int A, int L, int W, int total_tick) :
-  total_tick(total_tick), num_stations(N), packets_sent(0) {
+  total_tick(total_tick), num_stations(N), packets_sent(0), packets_generated(0) {
     for(int i = 0; i < N; i++) {
       Station station(total_tick, A, L, W);
       stations.push_back(station);
@@ -123,8 +127,12 @@ public:
   }
   void simulate() {
     for(int tick = 0; tick < total_tick; tick++) {
-      for(int i = 0; i < num_stations; i++) {
-        //cout << "station " << i << endl;
+      for(int i = num_stations - 1; i >= 0; i--) {
+        // if(tick % 10000 == 0) {
+        //   cout << "station " << i << endl;
+        //   cout << stations[i].q.packet_queue.size() << endl;
+        // }
+
         Station &station = stations[i];
         station.sync_on_tick(tick);
 
@@ -135,10 +143,12 @@ public:
           //cout << "collision: " << tick << endl;
           // stations attempts to start transmission but medium is busy
           if(station.get_transmission_duration() == 0) {
+            counter2++;
             station.wait_random();
           }
           // station is already transmitting and sensed collision
           else {
+            counter++;
             station.abort();
           }
           for(int j = 0; j != i && j < num_stations; j++) {
@@ -167,6 +177,7 @@ public:
     for(int i = 0; i < num_stations; i++) {
       total_delay += stations[i].get_total_delay();
       packets_generated += stations[i].packets_generated;
+      cout << "station: " << i << " packet sent: " << stations[i].q.packet_sent << endl;
     }
 
     cout << "packets generated: " << packets_generated << endl;
@@ -188,8 +199,16 @@ private:
 int main() {
   int N, A, total_tick;
   cin >> N >> A >> total_tick;
-  CSMA_CD csma(N, A, 8000, 1, total_tick);
-  csma.simulate();
-
+  // total_tick = 10000000;
+  // for(int j = 2; j < 9; j++)
+  //   for(int i = 2; i < 9; i++) {
+  //     N = i * 2;
+  //     A = j * 2;
+  // CSMA_CD csma(N, A, 8000, 1, total_tick);
+      CSMA_CD csma(N, A, 8000, 1, total_tick);
+      csma.simulate();
+    // }
+      cout << "c: " << counter << endl;
+      cout << "c2: " << counter2 << endl;
   return 0;
 }

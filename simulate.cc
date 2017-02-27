@@ -23,7 +23,7 @@ Simulator(int total_tick, double lambda, int packet_length, int transmission_rat
     transmission_rate(transmission_rate), buffer_size(buffer_size),
     packet_counter(0), current_tick(0), packet_loss_counter(0),
     cumulative_packet_in_queue(0), total_in_queue_time(0), next_packet_arival_time(calc_arrival_time()),
-    total_delay(0) {
+    total_delay(0), packet_sent(0) {
 }
 
 void start() {
@@ -62,6 +62,8 @@ bool departure(){
     packet_queue.pop();
     delete temp;
 
+    packet_sent++;
+
     return true;
   }
   return false;
@@ -86,6 +88,8 @@ void drop_frame() {
 
 int     total_delay;
 int     current_tick;
+queue<Packet*> packet_queue;
+int     packet_sent;
 
 private:
 // 1 tick = 10us
@@ -107,7 +111,6 @@ int     next_packet_arival_time;
 long long     cumulative_packet_in_queue;
 
 long long     total_in_queue_time;
-queue<Packet*> packet_queue;
 
 int calc_arrival_time(){
   double u = (static_cast<double>(rand()) / static_cast<double>(RAND_MAX));   //generate random number between 0...1
