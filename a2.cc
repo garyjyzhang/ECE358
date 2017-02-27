@@ -96,23 +96,23 @@ public:
 
   Simulator q;
   int packets_generated;
+  int receiving_start, receiving_end;
+  int wait_counter;
+  int transmission_duration;
 
 private:
   int BEB(int i) {
     return rand() % (int) (pow((double) 2, (double) i)) * PROPAGATION_DELAY;
   }
 
-  int wait_counter;
   bool transmitting;
   // one queue from p1
   int retrans_count;
 
   // indicates when the latest receiving of a frame starts and ends
-  int receiving_start, receiving_end;
   //the wait time for BEB
   int wait_time;
   // the amount of time in ticks that the latest transmission has lasted
-  int transmission_duration;
 };
 
 class CSMA_CD {
@@ -128,10 +128,6 @@ public:
   void simulate() {
     for(int tick = 0; tick < total_tick; tick++) {
       for(int i = num_stations - 1; i >= 0; i--) {
-        // if(tick % 10000 == 0) {
-        //   cout << "station " << i << endl;
-        //   cout << stations[i].q.packet_queue.size() << endl;
-        // }
 
         Station &station = stations[i];
         station.sync_on_tick(tick);
@@ -139,7 +135,7 @@ public:
         // if the station is waiting or has nothing to transmit, simply move on to the next station
         if(station.waiting() || !station.is_transmitting()) continue;
 
-        if(station.is_transmitting() && station.is_receiving()) {
+        if(station.is_transmitting() && (station.is_receiving() || station.waiting())) {
           //cout << "collision: " << tick << endl;
           // stations attempts to start transmission but medium is busy
           if(station.get_transmission_duration() == 0) {
@@ -150,9 +146,10 @@ public:
           else {
             counter++;
             station.abort();
-          }
-          for(int j = 0; j != i && j < num_stations; j++) {
-            stations[j].stop_receiving_after_delay(tick);
+            for(int j = 0; j < num_stations; j++) {
+              if(i != j)
+                stations[j].stop_receiving_after_delay(tick);
+            }
           }
           continue;
         }
@@ -160,12 +157,14 @@ public:
 
         // station is transmitting and no collision has been detected
         if(station.get_transmission_duration() == 0) {
-          for(int j = 0; j != i && j < num_stations; j++) {
-            stations[j].start_receiving_after_delay(tick);
+          for(int j = 0; j < num_stations; j++) {
+            if(i != j)
+              stations[j].start_receiving_after_delay(tick);
           }
         } else if(station.transmission_complete()) {
-            for(int j = 0; j != i && j < num_stations; j++) {
-              stations[j].stop_receiving_after_delay(tick);
+            for(int j = 0; j < num_stations; j++) {
+              if(i != j)
+                stations[j].stop_receiving_after_delay(tick);
             }
             packets_sent++;
         }
